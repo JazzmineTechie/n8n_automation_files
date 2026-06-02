@@ -1,0 +1,110 @@
+{
+  "name": "Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "28ae1e45-e31b-4c6c-8445-608c7b99ebdc",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "storyreadinginenglish@gmail.com",
+        "subject": "Workflow Error",
+        "emailType": "text",
+        "message": "=Workflow Error   \n\nWorkflow: {{ $json.workflow.name }}\nNode: {{ $json.execution.lastNodeExecuted }}\nError:   {{ $json.execution.error.message }}\nExecution: {{ $json.execution.url }}\nTime: {{ $now.toISO() }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1223bdee-e7f9-4ba3-ba7f-b22279607913",
+      "name": "Send a message",
+      "webhookId": "24b917ed-3581-4600-b037-f69352382b8b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "TdqioY88Blt8Atar",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AV5L9AV99",
+          "mode": "list",
+          "cachedResultName": "operations"
+        },
+        "text": "=Workflow Error   \n\nWorkflow: {{ $('Error Trigger').item.json.workflow.name }}\nNode: {{ $('Error Trigger').item.json.execution.lastNodeExecuted }}\nError:   {{ $('Error Trigger').item.json.execution.error.message }}\nExecution: {{ $('Error Trigger').item.json.execution.url }}\nTime: {{ $now.toISO() }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "506ac3b7-8529-487a-8a96-7ef982c13d75",
+      "name": "Send a message1",
+      "webhookId": "b5b6df86-c12a-459e-bd9a-fc5ea236c436",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "FDYxKIKk5Z3YZf69",
+          "name": "Slack OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f8727e13-6177-4fc7-976d-0b54b0f372a4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b95d2b115890f357f90e089a9b4a669776103eb244a03dcae45dcd789dc9d4da"
+  },
+  "id": "KW20s84hvdWqydyL",
+  "tags": []
+}
