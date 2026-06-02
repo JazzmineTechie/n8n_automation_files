@@ -1,0 +1,2825 @@
+{
+  "name": "MediFlow Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "register",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        16
+      ],
+      "id": "ab2770bc-8295-45ee-99ee-681dfc19db4b",
+      "name": "Webhook",
+      "webhookId": "d442696e-20cc-42a2-8438-c61d505e3449"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "patients",
+        "limit": 1,
+        "filterType": "string",
+        "filterString": "=email=eq.{{ $json.email }}"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        16
+      ],
+      "id": "dce6a154-1868-49de-8bcb-141a04f46663",
+      "name": "Check Duplicate Email",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "45b11c1a-bd8c-4605-bb69-c165bc597428",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        16,
+        16
+      ],
+      "id": "dacc9227-bce6-4435-83b7-9e23fa204e97",
+      "name": "Email Already Exists?"
+    },
+    {
+      "parameters": {
+        "tableId": "patients",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "full_name",
+              "fieldValue": "={{ $('Validate Fields').item.json.full_name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Validate Fields').item.json.email }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $('Validate Fields').item.json.phone }}"
+            },
+            {
+              "fieldId": "date_of_birth",
+              "fieldValue": "={{ $('Validate Fields').item.json.date_of_birth }}"
+            },
+            {
+              "fieldId": "gender",
+              "fieldValue": "={{ $('Validate Fields').item.json.gender }}"
+            },
+            {
+              "fieldId": "blood_group",
+              "fieldValue": "={{ $('Validate Fields').item.json.blood_group }}"
+            },
+            {
+              "fieldId": "allergies",
+              "fieldValue": "={{ $('Validate Fields').item.json.allergies }}"
+            },
+            {
+              "fieldId": "portal_pin",
+              "fieldValue": "={{ $('Validate Fields').item.json.portal_pin }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -80
+      ],
+      "id": "14443662-ad10-4c1f-a934-a217a34702a7",
+      "name": "Insert Patient",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "notifications",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "patient_id",
+              "fieldValue": "={{ $('Insert Patient').item.json.id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "confirmation"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "whatsapp"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "=Welcome to MediFlow, {{ $('Validate Fields').item.json.full_name }}! Your profile has been created. Log in to book your appointment."
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -80
+      ],
+      "id": "6ffec80c-d6e1-4031-ba3b-44bb4d9bdb7b",
+      "name": "Log Notification",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Patient registered successfully\",\n  \"patient_id\": \"{{ $('Insert Patient').item.json.id }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        688,
+        -80
+      ],
+      "id": "ec34a701-703a-4695-8ecf-b772edffe433",
+      "name": "Return Success"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"An account with this email already exists. Please log in.\"\n}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        144
+      ],
+      "id": "5d98b859-f5bc-4e2b-92cc-519d96d0c6d6",
+      "name": "Return Duplicate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nconst required = [\n  'full_name', 'email', 'phone',\n  'date_of_birth', 'gender',\n  'blood_group', 'allergies', 'portal_pin'\n];\n\nfor (const field of required) {\n  if (!body[field] || body[field].toString().trim() === '') {\n    return [{\n      json: {\n        success: false,\n        error: `Missing required field: ${field}`\n      }\n    }];\n  }\n}\n\nif (body.portal_pin.toString().length !== 4) {\n  return [{\n    json: {\n      success: false,\n      error: 'PIN must be exactly 4 digits'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    valid: true,\n    full_name:     body.full_name.trim(),\n    email:         body.email.toLowerCase().trim(),\n    phone:         body.phone.trim(),\n    date_of_birth: body.date_of_birth,\n    gender:        body.gender.toLowerCase(),\n    blood_group:   body.blood_group,\n    allergies:     body.allergies.trim(),\n    portal_pin:    body.portal_pin.toString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        16
+      ],
+      "id": "4ecf0c94-4580-4614-9d48-84910c4df75b",
+      "name": "Validate Fields"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow Patient Registration\n\n### This workflow handles the patients registration page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -864,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "36dceb7c-c31e-414d-9d69-259779519c2a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow Patient Login\n\n### This workflow handles the patients Login page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1920,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "81254367-020d-4bc1-a3bc-3d2aa33e7d47",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2176,
+        32
+      ],
+      "id": "31cd2671-9e50-4433-9bd1-1d8fa454c940",
+      "name": "Webhook1",
+      "webhookId": "2e3b4328-ad24-4c00-a1ef-7ddfdca6252c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://akrwucfwvwvooxyrdrub.supabase.co/rest/v1/rpc/patient_login",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_email",
+              "value": "={{ $json.body.email.toLowerCase().trim() }}"
+            },
+            {
+              "name": "p_pin",
+              "value": "={{ $json.body.portal_pin.toString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2400,
+        32
+      ],
+      "id": "aa8407d3-5658-4a87-9f3c-16cb38b30d5f",
+      "name": "Verify Credentials",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e75c7ea9-17e3-446e-afc7-9ca9f0c47074",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2624,
+        32
+      ],
+      "id": "38daf7cc-d571-433c-bdd0-0675b539836a",
+      "name": "Credentials Valid?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"patient\": {\n    \"id\":          \"{{ $json.id }}\",\n    \"full_name\":   \"{{ $json.full_name }}\",\n    \"email\":       \"{{ $json.email }}\",\n    \"phone\":       \"{{ $json.phone }}\",\n    \"blood_group\": \"{{ $json.blood_group }}\",\n    \"allergies\":   \"{{ $json.allergies }}\"\n  }\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2832,
+        -64
+      ],
+      "id": "e469e731-0fab-4c5f-a4f3-ddb0de9c5327",
+      "name": "Return Patient Data"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Incorrect email or PIN. Please try again.\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2832,
+        128
+      ],
+      "id": "cd3b3874-6f49-4e72-81dc-4c1b7fab2680",
+      "name": "Return Login Error"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow Appointment Booking\n\n### This workflow handles the patients Appointment booking page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        496
+      ],
+      "typeVersion": 1,
+      "id": "d9197d42-9c45-408f-86da-d7a67cb7a86f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "appointment-booking",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -624,
+        640
+      ],
+      "id": "a907b02b-ac94-4679-bf99-1fd85b657460",
+      "name": "Webhook2",
+      "webhookId": "3d1d50f3-9eab-473b-867d-309ce0109c4d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nconst required = ['patient_id', 'slot_id', 'chief_complaint'];\n\nfor (const field of required) {\n  if (!body[field] || body[field].toString().trim() === '') {\n    return [{\n      json: {\n        valid: false,\n        error: `Missing required field: ${field}`\n      }\n    }];\n  }\n}\n\n// Check for urgent keywords in symptoms\nconst urgentKeywords = [\n  'chest pain', 'chest tightness', 'can\\'t breathe',\n  'difficulty breathing', 'unconscious', 'seizure',\n  'stroke', 'severe bleeding', 'heart'\n];\n\nconst symptoms = (body.pre_symptoms || '').toLowerCase();\nconst isUrgent = urgentKeywords.some(k => symptoms.includes(k));\n\nreturn [{\n  json: {\n    valid: true,\n    patient_id:      body.patient_id.trim(),\n    slot_id:         body.slot_id.trim(),\n    chief_complaint: body.chief_complaint.trim(),\n    pre_symptoms:    body.pre_symptoms || null,\n    urgent_flag:     isUrgent\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        640
+      ],
+      "id": "adde8f30-94f9-4847-a8d9-9903f0863aa6",
+      "name": "Validate Booking"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "62f1aac8-a61a-4660-8b36-4e39f4d0230c",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -208,
+        640
+      ],
+      "id": "765cd685-3656-4995-a93b-91373fc6b0bc",
+      "name": "Input Valid?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.error }}\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        736
+      ],
+      "id": "897753cd-1372-4317-871d-5b9634f1fc3c",
+      "name": "Return Validation Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://akrwucfwvwvooxyrdrub.supabase.co/rest/v1/rpc/book_appointment",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_patient_id",
+              "value": "={{ $json.patient_id }}"
+            },
+            {
+              "name": "p_slot_id",
+              "value": "={{ $json.slot_id }}"
+            },
+            {
+              "name": "p_chief_complaint",
+              "value": "={{ $json.chief_complaint }}"
+            },
+            {
+              "name": "p_pre_symptoms",
+              "value": "={{ $json.pre_symptoms }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        544
+      ],
+      "id": "ac458264-daa2-48e2-a1f1-996969242234",
+      "name": "Book Appointment",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ce6d9ee7-d4f4-4636-8214-133d7d13d7ad",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "SLOT_TAKEN",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        544
+      ],
+      "id": "c49fb7ca-7107-4675-8577-08655cd12194",
+      "name": "Booking Successful?",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"This slot has just been booked by someone else. Please choose another time.\"\n}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        416,
+        640
+      ],
+      "id": "82fe61ce-131c-40a0-875a-bc6890f4b93f",
+      "name": "Return Slot Taken"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "slots",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Booking').item.json.slot_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        416,
+        448
+      ],
+      "id": "e3e6c301-4a02-4d59-b0e4-49586054d396",
+      "name": "Get Slot Details",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "patients",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Validate Booking').item.json.patient_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        656,
+        448
+      ],
+      "id": "bc3a6f39-3941-45d2-9e3a-94a844754712",
+      "name": "Get Patient Details",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "nonsoskyokpara@gmail.com",
+          "mode": "list",
+          "cachedResultName": "nonsoskyokpara@gmail.com"
+        },
+        "start": "={{ $('Get Slot Details').item.json.slot_date }}T{{ $('Get Slot Details').item.json.slot_time }}",
+        "end": "={{ $('Get Slot Details').item.json.slot_date + 'T' + ($('Get Slot Details').item.json.slot_time.substring(0,2) * 1 + ($('Get Slot Details').item.json.slot_time.substring(3,5) * 1 + 30 >= 60 ? 1 : 0)).toString().padStart(2,'0') + ':' + (($('Get Slot Details').item.json.slot_time.substring(3,5) * 1 + 30) % 60).toString().padStart(2,'0') + ':00+01:00' }}",
+        "additionalFields": {
+          "description": "=Patient: {{ $('Get Patient Details').item.json.full_name }} \nPhone: {{ $('Get Patient Details').item.json.phone }} \nBlood Group: {{ $('Get Patient Details').item.json.blood_group }} \n⚠️ Allergies: {{ $('Get Patient Details').item.json.allergies }} \nReason: {{ $('Validate Booking').item.json.chief_complaint }} \nSymptoms: {{ $('Validate Booking').item.json.pre_symptoms }}",
+          "summary": "={{ $('Get Patient Details').item.json.full_name }} — {{ $('Validate Booking').item.json.chief_complaint }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        448
+      ],
+      "id": "b162e08e-736b-40b8-bee6-e3bec1d6cb25",
+      "name": "Create Calendar Event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "b7XUyoVOSSxPhI78",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "notifications",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "patient_id",
+              "fieldValue": "={{ $('Validate Booking').item.json.patient_id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "confirmation"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "whatsapp"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ 'Hello ' + $('Get Patient Details').item.json.full_name + '! Your appointment with Dr. Adaeze Eze is confirmed for ' + $('Get Slot Details').item.json.slot_date + ' at ' + $('Get Slot Details').item.json.slot_time + '. Please arrive 5 minutes early.' }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        448
+      ],
+      "id": "d98c9db4-f660-4b75-89eb-0e63d2347091",
+      "name": "Log Booking Notification",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Book Appointment').item.json.data }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "urgent_flag",
+              "fieldValue": "={{ $('Validate Booking').item.json.urgent_flag }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        448
+      ],
+      "id": "15592f35-7092-4a99-8c05-7c0afe0de2bc",
+      "name": "Update Urgent Flag",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Appointment confirmed\",\n  \"appointment_id\": \"{{ $('Book Appointment').item.json.data }}\",\n  \"slot_date\": \"{{ $('Get Slot Details').item.json.slot_date }}\",\n  \"slot_time\": \"{{ $('Get Slot Details').item.json.slot_time }}\",\n  \"doctor\": \"{{ $('Get Slot Details').item.json.doctor_name }}\",\n  \"urgent_flag\": \"{{ $('Validate Booking').item.json.urgent_flag }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1488,
+        448
+      ],
+      "id": "37c5fcab-4f8d-4e44-ad7b-12004e95a00b",
+      "name": "Return Booking Confirmation"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow RAG Clinical Query\n\n### This workflow handles the patients Appointment booking page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -896,
+        1152
+      ],
+      "typeVersion": 1,
+      "id": "8e05f49c-8ff7-4127-8a80-c6075c532c8d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rag-query",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -640,
+        1312
+      ],
+      "id": "f35155ea-e51d-46d0-8d4e-5e46d7cd131d",
+      "name": "Webhook3",
+      "webhookId": "0f5f568d-af2c-423d-a421-1e14c9a3046a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nif (!body.patient_id || !body.question) {\n  return [{\n    json: {\n      valid: false,\n      error: 'patient_id and question are required'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    valid: true,\n    patient_id: body.patient_id.trim(),\n    question:   body.question.trim()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        1312
+      ],
+      "id": "fc7e2752-ce71-45b2-b7ba-a7f459159a52",
+      "name": "Extract Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fd59605a-cb8f-467b-9eab-6b021f907354",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        1312
+      ],
+      "id": "d648930b-e983-419a-a372-dd27f6ebee0f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"{{ $json.error }}\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        1408
+      ],
+      "id": "6697df29-d53a-4097-8c3d-6bea2a3c4fd7",
+      "name": "Return Validation Error1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-3-small"
+            },
+            {
+              "name": "input",
+              "value": "={{ $json.question }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        1216
+      ],
+      "id": "4c98e685-31fc-4983-a1cf-3dd6f753b6d9",
+      "name": "Embed Question",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        },
+        "openAiApi": {
+          "id": "hEUljDmanUQCCOTe",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const embedding = $input.first().json.data[0].embedding;\nconst patient_id = $('Extract Input').item.json.patient_id;\nconst question = $('Extract Input').item.json.question;\n\nreturn [{\n  json: {\n    patient_id,\n    question,\n    embedding\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        1216
+      ],
+      "id": "8825a9a9-2f06-435f-b6e3-be87bcda1274",
+      "name": "Extract Embedding"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://akrwucfwvwvooxyrdrub.supabase.co/rest/v1/rpc/match_clinical_notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query_embedding",
+              "value": "={{ $json.embedding }}"
+            },
+            {
+              "name": "match_patient_id",
+              "value": "={{ $json.patient_id }}"
+            },
+            {
+              "name": "match_count",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        1216
+      ],
+      "id": "7df6eece-72cd-46fb-b0bc-6d41def94cb0",
+      "name": "Search Clinical Notes",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "={{ $('Build Prompt').item.json.system_prompt }}"
+            },
+            {
+              "content": "={{ $('Build Prompt').item.json.user_prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 800,
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        1216
+      ],
+      "id": "a9024fd1-9dd2-4558-9e63-5f778dd0171f",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all();\nconst question = $('Extract Input').item.json.question;\n\n// Build context from matched notes\nlet context = '';\nlet sources = [];\n\nresults.forEach((item, index) => {\n  const note = item.json;\n  context += `Note ${index + 1} (similarity: ${(note.similarity * 100).toFixed(0)}%):\\n${note.content}\\n\\n`;\n  sources.push(`Note ${index + 1}: ${note.content.substring(0, 80)}...`);\n});\n\nif (!context) {\n  context = 'No clinical notes found for this patient.';\n}\n\nconst systemPrompt = `You are a clinical AI assistant helping a doctor \nreview a patient's medical history. You answer questions based ONLY on \nthe clinical notes provided. Be concise, accurate, and medically precise.\nAlways highlight any allergies or drug interactions if relevant.\nIf the information is not in the notes, say so clearly — do not guess.`;\n\nconst userPrompt = `Patient clinical notes:\n${context}\n\nDoctor's question: ${question}\n\nPlease provide a clear, concise answer based only on the notes above.\nEnd your answer with a \"Sources:\" section listing which notes you used.`;\n\nreturn [{\n  json: {\n    system_prompt: systemPrompt,\n    user_prompt:   userPrompt,\n    sources:       sources,\n    question:      question,\n    context_found: results.length > 0\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        1216
+      ],
+      "id": "3c99aa73-9c72-42e0-a9a6-6c859527cfa5",
+      "name": "Build Prompt"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.responseBody }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1408,
+        1216
+      ],
+      "id": "080d22eb-e5b1-4811-aab5-07545dadba9a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow Seed Embeddings (Run Once)\n\n### This workflow handles the patients Appointment booking page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1936,
+        1744
+      ],
+      "typeVersion": 1,
+      "id": "c6257415-bbb6-4a1d-94d1-dc6db0a90b71",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        1888
+      ],
+      "id": "be995a34-4be7-4f7b-928d-db9d5d6cf267",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "clinical_notes",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "embedding",
+              "condition": "is",
+              "keyValue": "null"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        1888
+      ],
+      "id": "d199cc6e-b8c5-420e-a981-b8526a5f4eb0",
+      "name": "Get many rows",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-3-small"
+            },
+            {
+              "name": "input",
+              "value": "={{ $json.content }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2832,
+        1888
+      ],
+      "id": "74230346-c9a1-4313-83f6-ebbada943449",
+      "name": "Generate Embedding",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "maxTries": 2,
+      "credentials": {
+        "openAiApi": {
+          "id": "hEUljDmanUQCCOTe",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const noteId = $('Loop Through Notes').item.json.id;\nconst embedding = $input.first().json.data[0].embedding;\n\nreturn [{\n  json: {\n    id: noteId,\n    embedding: JSON.stringify(embedding)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        1888
+      ],
+      "id": "a5b830a9-1441-418c-a3b4-ad1b0e0169b1",
+      "name": "Extract Vector"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://akrwucfwvwvooxyrdrub.supabase.co/rest/v1/clinical_notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "=eq.{{ $json.id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "embedding",
+              "value": "={{ $json.embedding }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3248,
+        1888
+      ],
+      "id": "f3b63a12-d753-4cf0-a541-a2d32e167a24",
+      "name": "Save Embedding",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2624,
+        1888
+      ],
+      "id": "fe48a170-29be-43bb-ae4b-9a3c9d240179",
+      "name": "Loop Through Notes"
+    },
+    {
+      "parameters": {
+        "jsCode": "const answer = $input.first().json.output[0].content[0].text;\nconst question = $('Extract Input').item.json.question;\nconst contextFound = $('Build Prompt').item.json.context_found;\n\nconst responseBody = JSON.stringify({\n  success:       true,\n  question:      question,\n  answer:        answer,\n  context_found: contextFound,\n  model:         'gpt-4o',\n  timestamp:     new Date().toISOString()\n});\n\nreturn [{\n  json: {\n    responseBody\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        1216
+      ],
+      "id": "2ff9290d-8314-4c99-9da4-9fd54616213a",
+      "name": "Format + Build Response"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow Save SOAP Note\n\n### This workflow handles the patients Appointment booking page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1920,
+        1040
+      ],
+      "typeVersion": 1,
+      "id": "52975f36-c419-40bd-9a3e-3137fb81e89f",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "save-note",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2176,
+        1200
+      ],
+      "id": "9d0f2dd8-d9c4-404f-82f9-837c7620f671",
+      "name": "Webhook4",
+      "webhookId": "5b93f89c-85fd-4a3b-b570-3e4fc468bd8a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nconst required = [\n  'patient_id', 'appointment_id',\n  'soap_subjective', 'soap_objective',\n  'soap_assessment', 'soap_plan',\n  'diagnosis', 'prescription', 'doctor_name'\n];\n\nfor (const field of required) {\n  if (!body[field] || body[field].toString().trim() === '') {\n    return [{\n      json: {\n        valid: false,\n        error: `Missing required field: ${field}`\n      }\n    }];\n  }\n}\n\n// Combine all SOAP fields into one rich text for embedding\nconst combinedNote = `\nDoctor: ${body.doctor_name}\nDiagnosis: ${body.diagnosis}\nPrescription: ${body.prescription}\n\nSubjective: ${body.soap_subjective}\nObjective: ${body.soap_objective}\nAssessment: ${body.soap_assessment}\nPlan: ${body.soap_plan}\n${body.raw_notes ? 'Additional notes: ' + body.raw_notes : ''}\n`.trim();\n\nreturn [{\n  json: {\n    valid:            true,\n    patient_id:       body.patient_id.trim(),\n    appointment_id:   body.appointment_id.trim(),\n    soap_subjective:  body.soap_subjective.trim(),\n    soap_objective:   body.soap_objective.trim(),\n    soap_assessment:  body.soap_assessment.trim(),\n    soap_plan:        body.soap_plan.trim(),\n    diagnosis:        body.diagnosis.trim(),\n    prescription:     body.prescription.trim(),\n    raw_notes:        body.raw_notes || null,\n    doctor_name:      body.doctor_name.trim(),\n    combined_note:    combinedNote\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        1200
+      ],
+      "id": "dc0c0e20-ed37-49b7-a0b8-c474380088a0",
+      "name": "Validate Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "883dc2a9-910b-484e-a04e-454c4719df55",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2592,
+        1200
+      ],
+      "id": "e1f932dd-b8a1-4034-a6c0-bda2b38827a5",
+      "name": "Input Valid?1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"{{ $json.error }}\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2800,
+        1296
+      ],
+      "id": "fe74bd5f-4c05-42f7-95b3-81671dd963ed",
+      "name": "Return Validation Error2"
+    },
+    {
+      "parameters": {
+        "tableId": "visits",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "patient_id",
+              "fieldValue": "={{ $('Validate Input').item.json.patient_id }}"
+            },
+            {
+              "fieldId": "appointment_id",
+              "fieldValue": "={{ $('Validate Input').item.json.appointment_id }}"
+            },
+            {
+              "fieldId": "chief_complaint",
+              "fieldValue": "={{ $('Validate Input').item.json.soap_subjective }}"
+            },
+            {
+              "fieldId": "soap_subjective",
+              "fieldValue": "={{ $('Validate Input').item.json.soap_subjective }}"
+            },
+            {
+              "fieldId": "soap_objective",
+              "fieldValue": "={{ $('Validate Input').item.json.soap_objective }}"
+            },
+            {
+              "fieldId": "soap_assessment",
+              "fieldValue": "={{ $('Validate Input').item.json.soap_assessment }}"
+            },
+            {
+              "fieldId": "soap_plan",
+              "fieldValue": "={{ $('Validate Input').item.json.soap_plan }}"
+            },
+            {
+              "fieldId": "diagnosis",
+              "fieldValue": "={{ $('Validate Input').item.json.diagnosis }}"
+            },
+            {
+              "fieldId": "prescription",
+              "fieldValue": "={{ $('Validate Input').item.json.prescription }}"
+            },
+            {
+              "fieldId": "doctor_name",
+              "fieldValue": "={{ $('Validate Input').item.json.doctor_name }}"
+            },
+            {
+              "fieldId": "raw_notes",
+              "fieldValue": "={{ $('Validate Input').item.json.raw_notes }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        1104
+      ],
+      "id": "948865b6-0ced-45a3-81c6-a914b40353f7",
+      "name": "Insert Visit",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Validate Input').item.json.appointment_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "completed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3008,
+        1104
+      ],
+      "id": "872d70ac-529f-45c3-9a09-3941593ecd6a",
+      "name": "Mark Appointment Completed",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-3-small"
+            },
+            {
+              "name": "input",
+              "value": "={{ $('Validate Input').item.json.combined_note }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3216,
+        1104
+      ],
+      "id": "fa24bac1-5f90-46ce-a08e-0ccd76c4d12a",
+      "name": "Embed SOAP Note",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "openAiApi": {
+          "id": "hEUljDmanUQCCOTe",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://akrwucfwvwvooxyrdrub.supabase.co/rest/v1/clinical_notes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "patient_id",
+              "value": "={{ $('Validate Input').item.json.patient_id }}"
+            },
+            {
+              "name": "visit_id",
+              "value": "={{ $('Insert Visit').item.json.id }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $('Validate Input').item.json.combined_note }}"
+            },
+            {
+              "name": "embedding",
+              "value": "={{ JSON.stringify($json.data[0].embedding) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3424,
+        1104
+      ],
+      "id": "146cee19-9eee-4809-b225-d356578b54bc",
+      "name": "Save Clinical Note",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "notifications",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "patient_id",
+              "fieldValue": "={{ $('Validate Input').item.json.patient_id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "post_visit"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "whatsapp"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ 'Hello! Your consultation with ' + $('Validate Input').item.json.doctor_name + ' is complete. Diagnosis: ' + $('Validate Input').item.json.diagnosis + '. Prescription: ' + $('Validate Input').item.json.prescription + '. Please follow your treatment plan and book a follow-up if needed.' }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3632,
+        1104
+      ],
+      "id": "8e5398ce-d64c-4fb3-bf8a-e5832e4c7a85",
+      "name": "Create a row",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const visit = $('Insert Visit').item.json;\nconst note = $('Save Clinical Note').item.json;\n\nconst responseBody = JSON.stringify({\n  success:    true,\n  message:    'Consultation note saved and embedded into AI memory',\n  visit_id:   visit.id,\n  note_id:    note.id,\n  timestamp:  new Date().toISOString()\n});\n\nreturn [{ json: { responseBody } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        1104
+      ],
+      "id": "554445aa-4d4d-4152-98b9-a7addf939fdd",
+      "name": "Build Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.responseBody }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        4048,
+        1104
+      ],
+      "id": "3b967377-d479-4690-80ca-c2b49e8b5093",
+      "name": "Return SOAP Success"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow Cancel Appointment\n\n### This workflow handles the patients Appointment booking page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -896,
+        1776
+      ],
+      "typeVersion": 1,
+      "id": "7f4b8504-faa6-4403-85ed-9f65af01713f",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cancel",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -640,
+        1936
+      ],
+      "id": "a3cf2d63-03f2-4fe3-983f-abbf5986c60d",
+      "name": "Webhook5",
+      "webhookId": "c54e7f65-a709-4e63-8d1b-e9c8a8ec61f5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nif (!body.appointment_id || !body.patient_id) {\n  return [{\n    json: {\n      valid: false,\n      error: 'appointment_id and patient_id are required'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    valid:          true,\n    appointment_id: body.appointment_id.trim(),\n    patient_id:     body.patient_id.trim()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        1936
+      ],
+      "id": "d66f70e9-276b-423a-969a-7449352e3220",
+      "name": "Validate Input1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": false, \"error\": \"{{ $json.error }}\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -16,
+        2032
+      ],
+      "id": "6a8bfb82-25dc-4311-8769-069f562e9c4a",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "594af619-9a32-4946-8fa1-3f49dffc2fbf",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        1936
+      ],
+      "id": "06915baf-d760-4229-9f0a-072d34a5aae7",
+      "name": "Input Valid?2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "appointments",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Validate Input1').item.json.appointment_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        1840
+      ],
+      "id": "5e60cab4-e0cf-40e6-8e77-1aafb5a25d13",
+      "name": "Get Appointment",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bb123948-409c-4069-b033-1d3f1b7985ee",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "cancelled",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        1840
+      ],
+      "id": "5d2f9e84-32a9-4691-9a89-b19505ea70f9",
+      "name": "Already Cancelled?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"This appointment has already been cancelled.\"\n}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        400,
+        1744
+      ],
+      "id": "b14dc919-1231-4b42-91e1-f19711639498",
+      "name": "Return Already Cancelled"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://akrwucfwvwvooxyrdrub.supabase.co/rest/v1/rpc/cancel_appointment",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type ",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_appointment_id",
+              "value": "={{ $('Validate Input1').item.json.appointment_id }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        1936
+      ],
+      "id": "abbb3422-1892-4c9f-8a72-a0f59bbd07a0",
+      "name": "Cancel Appointment",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "notifications",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "patient_id",
+              "fieldValue": "={{ $('Validate Input1').item.json.patient_id }}"
+            },
+            {
+              "fieldId": "type",
+              "fieldValue": "confirmation"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "whatsapp"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ 'Your appointment on ' + $('Get Appointment').item.json.slot_id + ' has been successfully cancelled. You can book a new appointment anytime on the MediFlow portal.' }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "sent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        608,
+        1936
+      ],
+      "id": "94bbf6e0-9afa-4304-94e7-4037d94344fe",
+      "name": "Log Cancellation Notification",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseBody = JSON.stringify({\n  success:        true,\n  message:        'Appointment cancelled successfully. Your slot has been freed.',\n  appointment_id: $('Validate Input1').item.json.appointment_id,\n  timestamp:      new Date().toISOString()\n});\n\nreturn [{ json: { responseBody } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        1936
+      ],
+      "id": "31f480a4-a6cc-42d7-b94d-3b4dd33383dc",
+      "name": "Build Response1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.responseBody }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1024,
+        1936
+      ],
+      "id": "90f01e88-76ea-4eba-9892-4ba35db10019",
+      "name": "Return Success1"
+    },
+    {
+      "parameters": {
+        "content": "## MediFlow Doctor Login\n\n### This workflow handles the doctor Login page\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 336,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1920,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "5dec7c3b-fd47-4248-b5b0-2f38de214a94",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "doctor_login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2176,
+        640
+      ],
+      "id": "c72752b9-b730-489b-8114-565c63d93c98",
+      "name": "Webhook6",
+      "webhookId": "2e3b4328-ad24-4c00-a1ef-7ddfdca6252c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e75c7ea9-17e3-446e-afc7-9ca9f0c47074",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2624,
+        640
+      ],
+      "id": "beccf40d-14af-4d76-acec-a16f16eaab5c",
+      "name": "Credentials Valid?1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://akrwucfwvwvooxyrdrub.supabase.co/rest/v1/rpc/doctor_login",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_email",
+              "value": "={{ $json.body.email.toLowerCase().trim() }}"
+            },
+            {
+              "name": "p_pin",
+              "value": "={{ $json.body.portal_pin.toString() }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2400,
+        640
+      ],
+      "id": "16f5ced9-d384-4acc-9cef-64cbe6ab3519",
+      "name": "Verify Doctor Credentials",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "upTVCnF5e1SsiI3s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"patient\": {\n    \"id\":                    \"{{ $json.id }}\",\n    \"full_name\":             \"{{ $json.full_name }}\",\n    \"email\":                 \"{{ $json.email }}\",\n    \"specialisation:\":       \"{{ $json.specialisation }}\"\n  }\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2848,
+        544
+      ],
+      "id": "d0afb106-e3fb-4255-a27d-45b9318652d3",
+      "name": "Return Doctor Data"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Incorrect email or PIN. Please check your credentials.\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2848,
+        688
+      ],
+      "id": "8108c8e4-3cf1-4588-b6ed-7d926d177324",
+      "name": "Build Error Response"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Email": {
+      "main": [
+        [
+          {
+            "node": "Email Already Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Already Exists?": {
+      "main": [
+        [
+          {
+            "node": "Insert Patient",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Patient": {
+      "main": [
+        [
+          {
+            "node": "Log Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Notification": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Fields": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Verify Credentials",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Credentials": {
+      "main": [
+        [
+          {
+            "node": "Credentials Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credentials Valid?": {
+      "main": [
+        [
+          {
+            "node": "Return Patient Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Login Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Validate Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Booking": {
+      "main": [
+        [
+          {
+            "node": "Input Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Valid?": {
+      "main": [
+        [
+          {
+            "node": "Book Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Appointment": {
+      "main": [
+        [
+          {
+            "node": "Booking Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Successful?": {
+      "main": [
+        [
+          {
+            "node": "Get Slot Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Slot Taken",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Slot Details": {
+      "main": [
+        [
+          {
+            "node": "Get Patient Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Patient Details": {
+      "main": [
+        [
+          {
+            "node": "Create Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Log Booking Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Booking Notification": {
+      "main": [
+        [
+          {
+            "node": "Update Urgent Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Urgent Flag": {
+      "main": [
+        [
+          {
+            "node": "Return Booking Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook3": {
+      "main": [
+        [
+          {
+            "node": "Extract Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Input": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Embed Question",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Validation Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embed Question": {
+      "main": [
+        [
+          {
+            "node": "Extract Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Embedding": {
+      "main": [
+        [
+          {
+            "node": "Search Clinical Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Clinical Notes": {
+      "main": [
+        [
+          {
+            "node": "Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Format + Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Embedding": {
+      "main": [
+        [
+          {
+            "node": "Extract Vector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Vector": {
+      "main": [
+        [
+          {
+            "node": "Save Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Embedding": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Through Notes": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Generate Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format + Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook4": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Input Valid?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Valid?1": {
+      "main": [
+        [
+          {
+            "node": "Insert Visit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Validation Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Visit": {
+      "main": [
+        [
+          {
+            "node": "Mark Appointment Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Appointment Completed": {
+      "main": [
+        [
+          {
+            "node": "Embed SOAP Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embed SOAP Note": {
+      "main": [
+        [
+          {
+            "node": "Save Clinical Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Clinical Note": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Return SOAP Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook5": {
+      "main": [
+        [
+          {
+            "node": "Validate Input1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input1": {
+      "main": [
+        [
+          {
+            "node": "Input Valid?2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Valid?2": {
+      "main": [
+        [
+          {
+            "node": "Get Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Appointment": {
+      "main": [
+        [
+          {
+            "node": "Already Cancelled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Cancelled?": {
+      "main": [
+        [
+          {
+            "node": "Return Already Cancelled",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancel Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Appointment": {
+      "main": [
+        [
+          {
+            "node": "Log Cancellation Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Cancellation Notification": {
+      "main": [
+        [
+          {
+            "node": "Build Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response1": {
+      "main": [
+        [
+          {
+            "node": "Return Success1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook6": {
+      "main": [
+        [
+          {
+            "node": "Verify Doctor Credentials",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credentials Valid?1": {
+      "main": [
+        [
+          {
+            "node": "Return Doctor Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Doctor Credentials": {
+      "main": [
+        [
+          {
+            "node": "Credentials Valid?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "KW20s84hvdWqydyL",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "9f887ae2-916a-42e6-888a-12031cfa5b0a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b95d2b115890f357f90e089a9b4a669776103eb244a03dcae45dcd789dc9d4da"
+  },
+  "id": "EldAKUv4bxtbB1G9",
+  "tags": []
+}
